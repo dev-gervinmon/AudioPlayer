@@ -1,10 +1,15 @@
 import * as DocumentPicker from "expo-document-picker";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Button, FlatList, Text, View } from "react-native";
 
 const SongList = () => {
   const [songs, setSongs] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
+  const router = useRouter();
 
+  const playSong = (uri: string) => {
+    router.push({ pathname: "/explore", params: { uri } });
+  }
   const pickSong = async () => {
     const result = await DocumentPicker.getDocumentAsync({
       type: "audio/*",
@@ -21,7 +26,7 @@ const SongList = () => {
         data={songs}
         keyExtractor={(item) => item.uri}
         renderItem={({ item }) => (
-          <Text style={{ marginVertical: 8 }}>{item.name}</Text>
+          <Text style={{ marginVertical: 8 }} onPress={() => playSong(item.uri)}>{item.name}</Text>
         )}
       />
     </View>
