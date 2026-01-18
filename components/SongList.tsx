@@ -18,6 +18,10 @@ const SongList = () => {
     loadSongs();
   }, []);
 
+  useEffect(() => {
+    AsyncStorage.setItem(SONGS_KEY, JSON.stringify(songs));
+  }, [songs]);
+
   const playSong = (uri: string) => {
     router.push({ pathname: "/explore", params: { uri } });
   };
@@ -69,6 +73,7 @@ const SongList = () => {
           </View>
         )}
       />
+      <Button title="Clear Songs" onPress={() => setSongs([])} />
     </View>
   );
 };
