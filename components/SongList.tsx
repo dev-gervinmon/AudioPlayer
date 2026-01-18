@@ -1,13 +1,22 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
 import * as mm from "music-metadata-browser";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, FlatList, Text, View } from "react-native";
-import { Song } from "../constants/common";
+import { Song, SONGS_KEY } from "../constants/common";
 
 const SongList = () => {
   const [songs, setSongs] = useState<Song[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    const loadSongs = async () => {
+      const stored = await AsyncStorage.getItem(SONGS_KEY);
+      if (stored) setSongs(JSON.parse(stored));
+    };
+    loadSongs();
+  }, []);
 
   const playSong = (uri: string) => {
     router.push({ pathname: "/explore", params: { uri } });
