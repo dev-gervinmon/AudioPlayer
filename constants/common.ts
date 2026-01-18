@@ -5,3 +5,5 @@ export type Song = {
   artist?: string;
   duration?: number;
 };
+
+export const SONGS_KEY = "songs";
