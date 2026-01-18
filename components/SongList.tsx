@@ -1,21 +1,43 @@
 import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
+import * as mm from "music-metadata-browser";
 import React, { useState } from "react";
 import { Button, FlatList, Text, View } from "react-native";
+import { Song } from "../constants/common";
 
 const SongList = () => {
-  const [songs, setSongs] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
+  const [songs, setSongs] = useState<Song[]>([]);
   const router = useRouter();
 
   const playSong = (uri: string) => {
     router.push({ pathname: "/explore", params: { uri } });
-  }
+  };
+
   const pickSong = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: "audio/*",
-    });
+    const result = await DocumentPicker.getDocumentAsync({ type: "audio/*" });
     if (result.assets && result.assets.length > 0) {
-      setSongs((prev) => [...prev, ...result.assets]);
+      for (const asset of result.assets) {
+        try {
+          const response = await fetch(asset.uri);
+          const arrayBuffer = await response.arrayBuffer();
+          const metadata = await mm.parseBuffer(
+            Buffer.from(arrayBuffer),
+            asset.mimeType || undefined,
+          );
+          setSongs((prev) => [
+            ...prev,
+            {
+              uri: asset.uri,
+              name: asset.name,
+              title: metadata.common.title,
+              artist: metadata.common.artist,
+              duration: metadata.format.duration,
+            },
+          ]);
+        } catch {
+          setSongs((prev) => [...prev, { uri: asset.uri, name: asset.name }]);
+        }
+      }
     }
   };
 
@@ -26,7 +48,16 @@ const SongList = () => {
         data={songs}
         keyExtractor={(item) => item.uri}
         renderItem={({ item }) => (
-          <Text style={{ marginVertical: 8 }} onPress={() => playSong(item.uri)}>{item.name}</Text>
+          <View style={{ marginVertical: 8 }}>
+            <Text onPress={() => playSong(item.uri)}>
+              {item.title || item.name} {item.artist ? `- ${item.artist}` : ""}
+            </Text>
+            {item.duration && (
+              <Text style={{ color: "#666" }}>
+                Duration: {Math.floor(item.duration)} sec
+              </Text>
+            )}
+          </View>
         )}
       />
     </View>
