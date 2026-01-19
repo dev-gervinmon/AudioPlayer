@@ -6,4 +6,11 @@ export type Song = {
   duration?: number;
 };
 
+export type Playlist = {
+  id: string;
+  name: string;
+  songUris: string[];
+};
+
+export const PLAYLISTS_KEY = "playlists";
 export const SONGS_KEY = "songs";
