@@ -1,15 +1,24 @@
-import { Playlist, PLAYLISTS_KEY } from "@/constants/common";
+import { Playlist, PLAYLISTS_KEY, Song, SONGS_KEY } from "@/constants/common";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { Button, FlatList, Modal, Text, TextInput, View } from "react-native";
 
 const PlaylistManager = () => {
+  const [allSongs, setAllSongs] = useState<Song[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(
     null,
   );
   const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    const loadSongs = async () => {
+      const stored = await AsyncStorage.getItem(SONGS_KEY);
+      if (stored) setAllSongs(JSON.parse(stored));
+    };
+    loadSongs();
+  }, []);
 
   useEffect(() => {
     const loadPlaylists = async () => {
@@ -125,6 +134,39 @@ const PlaylistManager = () => {
                 />
               </View>
             )}
+          />
+          {/* Add this block below the playlist songs */}
+          <Text style={{ fontSize: 16, fontWeight: "bold", marginTop: 24 }}>
+            Add Songs to Playlist
+          </Text>
+          <FlatList
+            data={allSongs.filter(
+              (song) =>
+                selectedPlaylist &&
+                !selectedPlaylist.songUris.includes(song.uri),
+            )}
+            keyExtractor={(item) => item.uri}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginVertical: 8,
+                }}
+              >
+                <Text style={{ flex: 1 }}>{item.title || item.name}</Text>
+                <Button
+                  title="Add"
+                  onPress={() => {
+                    if (selectedPlaylist)
+                      addSongToPlaylist(selectedPlaylist.id, item.uri);
+                  }}
+                />
+              </View>
+            )}
+            ListEmptyComponent={
+              <Text style={{ color: "#888" }}>No more songs to add.</Text>
+            }
           />
           <Button title="Close" onPress={() => setModalVisible(false)} />
         </View>
